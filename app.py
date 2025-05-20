@@ -213,11 +213,23 @@ if st.session_state.logged_in:
             st.subheader("🏜️ Weekly Transactions")
             selected_week_date = st.date_input("Choose a date", value=today, max_value=today, key="weekly")
             week_df, week_start, week_end = get_week_df(df, selected_week_date)
+
             st.markdown(f"#### Week Range: {week_start} → {week_end}")
             st.dataframe(week_df)
+            st.metric("💸 Weekly Sent", f"₹ {abs(week_df[week_df['Type']=='Sent']['Amount'].sum()):,.2f}")
+            st.metric("💰 Weekly Received", f"₹ {week_df[week_df['Type']=='Received']['Amount'].sum():,.2f}")
+
+            spending_week = week_df[week_df['Type'] == 'Sent']
+            num_days_week = spending_week['Raw Timestamp'].dt.date.nunique()
+            avg_daily_spent_week = spending_week['Amount'].sum() / num_days_week if num_days_week > 0 else 0
+            st.metric("📊 Avg Daily Spending (Sent)", f"₹ {avg_daily_spent_week:.2f}")
+
+            if st.checkbox("Show Spending Only", key='spending_only_weekly'):
+               st.dataframe(spending_week)
+
             if not week_df.empty and st.button("🧠 Generate Weekly AI Summary"):
-                summary_key = f"week-{week_start}-{file_hash}"
-                st.markdown(cached_gemini_summary(summary_key, week_df))
+               summary_key = f"week-{week_start}-{file_hash}"
+               st.markdown(cached_gemini_summary(summary_key, week_df))
 
         # -------- Monthly --------
         with tab3:
@@ -225,10 +237,22 @@ if st.session_state.logged_in:
             all_months = sorted(df['Month'].dropna().unique(), reverse=True)
             selected_month = st.selectbox("Choose a month", all_months, index=0)
             month_df = get_month_df(df, selected_month)
+
             st.dataframe(month_df)
+            st.metric("💸 Monthly Sent", f"₹ {abs(month_df[month_df['Type']=='Sent']['Amount'].sum()):,.2f}")
+            st.metric("💰 Monthly Received", f"₹ {month_df[month_df['Type']=='Received']['Amount'].sum():,.2f}")
+
+            spending_month = month_df[month_df['Type'] == 'Sent']
+            num_days_month = spending_month['Raw Timestamp'].dt.date.nunique()
+            avg_daily_spent_month = spending_month['Amount'].sum() / num_days_month if num_days_month > 0 else 0
+            st.metric("📊 Avg Daily Spending (Sent)", f"₹ {avg_daily_spent_month:.2f}")
+
+            if st.checkbox("Show Spending Only", key='spending_only_monthly'):
+                st.dataframe(spending_month)
+
             if not month_df.empty and st.button("🧠 Generate Monthly AI Summary"):
-                summary_key = f"month-{selected_month}-{file_hash}"
-                st.markdown(cached_gemini_summary(summary_key, month_df))
+               summary_key = f"month-{selected_month}-{file_hash}"
+               st.markdown(cached_gemini_summary(summary_key, month_df))
 
         # -------- All Transactions --------
                 # -------- All Transactions --------
