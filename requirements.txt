@@ -3,3 +3,4 @@ pandas
 bcrypt
 python-dotenv
 google-generativeai
+beautifulsoup4
